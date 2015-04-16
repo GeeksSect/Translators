@@ -1,9 +1,13 @@
+*
+!*.*
+
 *.userprefs
 *.exe
 *.obj
 *.lst
 *.[oa]
 *.selections.*
+*.DS_Store
 *.sh
 bin/
 obj/
