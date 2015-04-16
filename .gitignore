@@ -4,6 +4,7 @@
 *.lst
 *.[oa]
 *.selections.*
+*.sh
 bin/
 obj/
 build/
