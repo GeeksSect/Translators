@@ -6,17 +6,25 @@ import std.conv;
 
 import spec.common;
 
+unittest {
+	assert(mutable("nop".dup) == 0x0000);
+	assert(mutable("not 0x00".dup) == 0x4100);
+	assert(mutable("not [0x00]".dup) == 0x4101);
+	assert(mutable("udiv 0x00 {0x23FE} 0x04 [0x08]".dup) == 0x4f28);
+	assert(mutable("add byte 0x00 0x01 0x02".dup) == 0x1700);
+	assert(mutable("sub half [0x34] 0x36 0x38".dup) == 0x2701);
+}
+
 int main(string[] args)
 {
 	try {
 		File file = File(args[1], "r");
-		string mutLine;
+		int mutLine;
 
 	    foreach(line; file.byLine){
 	    	mutLine = mutable(line);
-	        foreach(word; mutLine.split)
-	            write('[', word, ']', ' ');
-	        writeln();
+//	        foreach(word; mutLine.split)
+			writefln("[%x]", mutLine);
 	    }
 	}
 	catch (Exception e) {
@@ -26,11 +34,16 @@ int main(string[] args)
 	return 0;
 }
 
-string mutable(char[] str) {
+int mutable(char[] str) {
 	int size = 0, count = 0, direct = 0, indirect = 0;
 	int i = 0, startOperand = 1;
 
 	foreach(word; str.split) {
+		//if (!i) {
+		//	foreach(opCode; OperationCode) {
+		//		writeln(opCode);
+		//	}
+		//}
 		if (i == 1) {
 			if (word == "byte") {
 				size = 1;
@@ -58,58 +71,57 @@ string mutable(char[] str) {
 
 	count = i - startOperand;
 
-	string result = "0x";
-	result = result ~ to!string(size);
+	auto result = 0x0;
+	result += (size * 0x1000);
 
 	switch (count) {
-	case 0:
-	case 1:
-		result = result ~ to!string(count);
+	case 0, 1:
+		result += (count * 0x100);
 		break;
 	case 2:
-		result = result ~ to!string(3);
+		result += 0x300;
 		break;
 	case 3:
-		result = result ~ to!string(7);
+		result += 0x700;
 		break;
 	case 4:
-		result = result ~ 'f';
+		result += 0xf00;
 		break;
 	default:
-		result = result ~ 'Q';
+		result += 0;
 	}
 
 	switch (direct) {
-	case 0:
-	case 1:
-	case 2:
-		result = result ~ to!string(direct);
+	case 0, 1, 2:
+		result += (direct * 0x10);
 		break;
 	case 3:
-		result = result ~ to!string(4);
+		result += 0x40;
 		break;
 	case 4:
-		result = result ~ to!string(8);
+		result += 0x80;
 		break;
 	default:
-		result = result ~ 'Q';
+		result += 0x0;
 	}
 
 	switch (indirect) {
-	case 0:
-	case 1:
-	case 2:
-		result = result ~ to!string(indirect);
+	case 0, 1, 2:
+		result += indirect;
 		break;
 	case 3:
-		result = result ~ to!string(4);
+		result += 0x4;
 		break;
 	case 4:
-		result = result ~ to!string(8);
+		result += 0x8;
 		break;
 	default:
-		result = result ~ 'Q';
+		result += 0x0;
 	}
+
+	//result = result ~ "QQ";
+
+
 
 	return result;
 }
